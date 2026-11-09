@@ -1,8 +1,10 @@
 # 05_workflow-hpc
 
+Analysis automation and working on servers.
+
 분석 자동화와 서버 사용
 
-| 주제 | 내용 | 정리 | 실습 |
+| Topic | Summary | Notes | Lab |
 |---|---|---|---|
 
-주제 이름 예시: `nextflow`, `slurm`, `docker`
+Example topic names: `nextflow`, `slurm`, `docker`

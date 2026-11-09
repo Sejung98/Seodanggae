@@ -1,8 +1,10 @@
 # 04_machine-learning
 
+Machine learning, deep learning, and LLMs.
+
 머신러닝, 딥러닝, LLM
 
-| 주제 | 내용 | 정리 | 실습 |
+| Topic | Summary | Notes | Lab |
 |---|---|---|---|
 
-주제 이름 예시: `ml-basics`, `deep-learning`, `llm`, `hugging-face`
+Example topic names: `ml-basics`, `deep-learning`, `llm`, `hugging-face`

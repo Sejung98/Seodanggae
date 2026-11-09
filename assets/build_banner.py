@@ -1,20 +1,22 @@
-"""Draw assets/banner.gif: a seodang dog playing and reciting the Thousand Character Classic.
+"""Draw assets/banner.svg: a seodang dog wandering, sitting, and rolling around.
+
+It is an animated SVG, not a GIF, because GitHub can hold GIFs behind a play button.
 
 Run: python assets/build_banner.py   (needs Pillow)
 """
 import math
 from pathlib import Path
 
-from PIL import Image, ImageColor, ImageDraw
+from PIL import Image, ImageDraw
 
-W, H, SCALE = 200, 64, 4
+W, H = 200, 64
 GROUND_Y = 50
 FEET_Y = 60
-MS_PER_FRAME = 80
+SECONDS_PER_FRAME = 0.08
 
 COLORS = {
     "K": "#3b2a1e", "Y": "#dca845", "D": "#b57f2a", "L": "#f6e4b8",
-    "N": "#1e1a18", "P": "#e86a7a", "W": "#ffffff",
+    "N": "#1e1a18", "P": "#e86a7a", "B": "#f2709c",
 }
 
 RUN_TOP = [
@@ -30,23 +32,7 @@ RUN_TOP = [
     "..KYYYLLLLLLLYYYK...",
     "..KYYKKKKKKKKKYYK...",
 ]
-STRETCHED = [
-    ".KYYK.........KYYK..",
-    "KYYK...........KYYK.",
-    "KKK.............KKK.",
-]
-PASSING = [
-    "..KYK........KYK....",
-    "..KYK........KYK....",
-    "..KKK........KKK....",
-]
-GATHERED = [
-    "....KYK....KYK......",
-    ".....KYK..KYK.......",
-    ".....KKK..KKK.......",
-]
-RUN_LEGS = [STRETCHED, PASSING, GATHERED, PASSING]
-SIT_BODY = [
+SIT = [
     ".........KK.....",
     "........KDDK....",
     ".......KYYYYKK..",
@@ -62,58 +48,68 @@ SIT_BODY = [
     "...KYYYYKYYK....",
     "...KKKKKKKKK....",
 ]
-TAIL_UP = {8: "KK", 9: "KYK", 10: ".KYK"}
-TAIL_DOWN = {11: "KYK", 12: ".KY", 13: "..K"}
 
-TIAN = [
-    "#########",
-    "....#....",
-    "....#....",
-    "#########",
-    "....#....",
-    "...#.#...",
-    "..#...#..",
-    ".#.....#.",
-    "#.......#",
-]
-DI = [
-    ".#....#..",
-    ".#....#..",
-    "###.#####",
-    ".#..#.#.#",
-    ".#..#.#.#",
-    ".#..#.#.#",
-    ".#..#.###",
-    ".##.#....",
-    "##..#####",
-]
+
+def sit_with_tail(part):
+    rows = list(SIT)
+    for j, tail in part.items():
+        rows[j] = tail + rows[j][len(tail):]
+    return rows
+
+
+def lie(eye, tail):
+    return [
+        ".............KK....",
+        "............KDDK...",
+        "...........KYYYYKK.",
+        tail[0] + "...KKKKKKKY" + eye + "YYYYK",
+        tail[1] + "KKYYYYYYYYYYYLLNK",
+        ".KYYYYYYYYYYYYYLLK.",
+        ".KYLYYYYYYYYYYKKK..",
+        "..KKKKKKKKKKKKK....",
+    ]
+
+
+def on_back(legs):
+    return legs + [
+        "..KKKKKKKKKKKKKK.....",
+        ".KLLLLLLLLLLLLLLKKKK.",
+        ".KLLLLLLLLLLLLLLKYYYK",
+        "KYYYYYYYYYYYYYYYKNYLK",
+        "KYYYYYYYYYYYYYYYKYYPK",
+        ".KKKKKKKKKKKKKKKKKKK.",
+    ]
+
+
+SPRITES = {
+    "run0": RUN_TOP + [".KYYK.........KYYK..", "KYYK...........KYYK.", "KKK.............KKK."],
+    "run1": RUN_TOP + ["..KYK........KYK....", "..KYK........KYK....", "..KKK........KKK...."],
+    "run2": RUN_TOP + ["....KYK....KYK......", ".....KYK..KYK.......", ".....KKK..KKK......."],
+    "sit0": sit_with_tail({8: "KK", 9: "KYK", 10: ".KYK"}),
+    "sit1": sit_with_tail({11: "KYK", 12: ".KY", 13: "..K"}),
+    "lie0": lie("N", ("K", "K")),
+    "lie1": lie("N", (".", "K")),
+    "nap0": lie("K", ("K", "K")),
+    "nap1": lie("K", (".", "K")),
+    "ball": [
+        "....KKKKKKKK....",
+        "..KKYYYYYYYYKK..",
+        ".KYYYYYYLLYYYYK.",
+        "KYYYNYYLLLLYYYYK",
+        "KYYYYYLLLLLYYYYK",
+        ".KYYYYYYLLYYYYK.",
+        "..KKYYYYYYYYKK..",
+        "....KKKKKKKK....",
+    ],
+    "back0": on_back(["....KK........KK.....", "....KYK......KYK.....", "....KYK......KYK....."]),
+    "back1": on_back(["...KK............KK..", "....KYK........KYK...", ".....KYK......KYK...."]),
+    "fly0": ["BB.BB", "BBKBB", "BB.BB", "..K.."],
+    "fly1": [".B.B.", ".BKB.", ".BKB.", "..K.."],
+}
+RUN_CYCLE = ("run0", "run1", "run2", "run1")
+
 SEO = ["..#...#", "..#...#", ".#.#.##", "#...#.#", "......#", "......#"]
 DANG = ["###.#..", "#...##.", "###.#..", "..###..", "..#.#..", "..###.."]
-
-
-def stamp(img, rows, x, y, colors=COLORS, flip=False):
-    width = max(len(r) for r in rows)
-    px = img.load()
-    for j, row in enumerate(rows):
-        row = row.ljust(width, ".")
-        for i, c in enumerate(row[::-1] if flip else row):
-            if c != "." and 0 <= x + i < W and 0 <= y + j < H:
-                px[x + i, y + j] = ImageColor.getrgb(colors[c])
-
-
-def glyph(img, rows, x, y, color):
-    stamp(img, rows, x, y, {"#": color})
-
-
-def run_sprite(frame):
-    return RUN_TOP + RUN_LEGS[frame % len(RUN_LEGS)]
-
-
-def sit_sprite(tail_up):
-    rows = list(SIT_BODY)
-    for j, part in (TAIL_UP if tail_up else TAIL_DOWN).items():
-        rows[j] = part + rows[j][len(part):]
-    return rows
 
 
 def draw_hanok(d):
@@ -133,18 +129,17 @@ def draw_hanok(d):
         t = abs(x - 55) / 49
         top = int(11 + 13 * t**1.6 - 5 * t**10)
         bottom = int(27 - 6 * t**8)
-        tile = "#46545f" if x % 3 else "#37434d"
-        d.line([x, top, x, bottom], fill=tile)
+        d.line([x, top, x, bottom], fill="#46545f" if x % 3 else "#37434d")
         d.point([x, bottom], fill="#26303a")
     d.rectangle([24, 9, 86, 11], fill="#26303a")  # ridge
     d.rectangle([21, 7, 25, 10], fill="#26303a")
     d.rectangle([85, 7, 89, 10], fill="#26303a")
-
-
-def draw_sign(img, d):
-    d.rectangle([45, 19, 65, 29], fill="#4a2c17", outline="#2a180c")
-    glyph(img, SEO, 47, 21, "#f6e4b8")
-    glyph(img, DANG, 56, 21, "#f6e4b8")
+    d.rectangle([45, 19, 65, 29], fill="#4a2c17", outline="#2a180c")  # sign
+    for rows, gx in ((SEO, 47), (DANG, 56)):
+        for j, row in enumerate(rows):
+            for i, c in enumerate(row):
+                if c == "#":
+                    d.point([gx + i, 21 + j], fill="#f6e4b8")
 
 
 def draw_tree(d):
@@ -167,7 +162,6 @@ def draw_background():
         d.line([x, y, x, GROUND_Y], fill="#8fbf9a")
     draw_tree(d)
     draw_hanok(d)
-    draw_sign(img, d)
     d.rectangle([0, GROUND_Y, W, H], fill="#d6b67c")
     d.rectangle([0, GROUND_Y, W, GROUND_Y + 1], fill="#7fb069")
     for x, y in ((8, 55), (31, 61), (64, 57), (96, 62), (141, 56), (170, 61), (192, 55)):
@@ -179,75 +173,120 @@ def draw_background():
 
 
 def timeline():
-    """One loop as (sprite, x, y, flip, bubble). The dog starts and ends off screen."""
+    """One loop as (sprite, x, lift, flip). The dog starts and ends off screen."""
     frames, n = [], 0
 
-    def run(x0, x1, flip, step=3):
+    def go(x0, x1, step=2):
         nonlocal n
-        direction = 1 if x1 > x0 else -1
-        for x in range(x0, x1, direction * step):
-            frames.append((run_sprite(n), x, FEET_Y - 14 - (n % 2), flip, None))
+        flip = x1 < x0
+        for x in range(x0, x1, -step if flip else step):
+            frames.append((RUN_CYCLE[n % 4], x, n % 2, flip))
             n += 1
 
-    def jump(x0, x1, flip, length=14, height=16):
+    def jump(x0, x1, length=14, height=16):
         for k in range(length + 1):
             x = round(x0 + (x1 - x0) * k / length)
-            lift = round(height * math.sin(math.pi * k / length))
-            frames.append((run_sprite(0), x, FEET_Y - 14 - lift, flip, None))
+            frames.append(("run0", x, round(height * math.sin(math.pi * k / length)), x1 < x0))
 
-    run(-26, 84, False)
-    jump(84, 128, False)
-    run(128, 150, False)
-    run(150, 128, True, step=2)
-    for k in range(40):  # sit and recite the first two characters of the classic
-        bubble = TIAN if k < 18 else DI if k >= 20 else None
-        frames.append((sit_sprite(k // 2 % 2 == 0), 128, FEET_Y - 14, True, bubble))
-    jump(128, 84, True)
-    run(84, -26, True)
+    def rest(name, x, count, flip, beat=3):
+        for k in range(count):
+            frames.append((f"{name}{k // beat % 2}", x, 0, flip))
+
+    def still(name, x, count, flip):
+        frames.extend((name, x, 0, flip) for _ in range(count))
+
+    go(-22, 40)                      # wander in
+    rest("sit", 40, 24, False)       # sit and wag
+    go(40, 24)                       # wander back
+    still("run1", 24, 6, True)       # look around
+    go(24, 84, step=3)               # dash at the books
+    jump(84, 128)
+    go(128, 146, step=3)
+    rest("lie", 146, 12, False)      # flop down
+    still("ball", 146, 3, False)     # roll over
+    for x in (146, 145, 144, 143, 142, 141):  # wriggle on its back
+        rest("back", x, 8, False, beat=2)
+    still("ball", 141, 3, False)
+    rest("lie", 141, 12, True)       # rolled to face the other way
+    still("ball", 141, 3, True)      # and back again
+    for x in (142, 143, 144, 145):
+        rest("back", x, 8, True, beat=2)
+    still("ball", 145, 3, True)
+    rest("sit", 145, 24, True)       # sit up
+    go(145, 128)
+    jump(128, 84)
+    go(84, 58)
+    rest("nap", 58, 42, True, beat=6)  # nap in the sun
+    rest("sit", 58, 12, True)        # wake up
+    go(58, -24, step=3)              # off to somewhere else
     return frames
 
 
-def draw_bubble(img, rows, x, y):
-    d = ImageDraw.Draw(img)
-    d.rectangle([x, y, x + 14, y + 14], fill="#ffffff", outline="#3b2a1e")
-    d.rectangle([x + 6, y + 15, x + 7, y + 16], fill="#3b2a1e")
-    glyph(img, rows, x + 3, y + 3, "#1e1a18")
+def run_paths(pixels):
+    """{color: path} for a grid of colors, merging each row's runs."""
+    paths = {}
+    for j, row in enumerate(pixels):
+        i = 0
+        while i < len(row):
+            c = row[i]
+            end = i
+            while end < len(row) and row[end] == c:
+                end += 1
+            if c:
+                paths.setdefault(c, []).append(f"M{i} {j}h{end - i}v1h-{end - i}z")
+            i = end
+    return "".join(f'<path fill="{c}" d="{"".join(p)}"/>' for c, p in paths.items())
 
 
-def draw_butterfly(img, f, total):
-    a = 2 * math.pi * f / total
-    x = round(150 + 34 * math.sin(a))
-    y = round(30 + 8 * math.sin(3 * a))
-    d = ImageDraw.Draw(img)
-    if f % 4 < 2:  # wings open
-        d.rectangle([x - 3, y - 2, x - 1, y + 1], fill="#f2709c")
-        d.rectangle([x + 1, y - 2, x + 3, y + 1], fill="#f2709c")
-    else:  # wings folded
-        d.rectangle([x - 1, y - 3, x - 1, y], fill="#f2709c")
-        d.rectangle([x + 1, y - 3, x + 1, y], fill="#f2709c")
-    d.line([x, y - 1, x, y + 1], fill="#3b2a1e")
+def sprite_svg(rows, flip):
+    width = max(len(r) for r in rows)
+    grid = []
+    for row in rows:
+        row = row.ljust(width, ".")
+        grid.append([COLORS.get(c) for c in (row[::-1] if flip else row)])
+    return run_paths(grid)
 
 
 def main():
-    background = draw_background()
     plan = timeline()
     assert plan[0][1] <= -21 and plan[-1][1] <= -21, "loop must start and end off screen"
-    frames = []
-    for f, (sprite, x, y, flip, bubble) in enumerate(plan):
-        img = background.copy()
-        draw_butterfly(img, f, len(plan))
-        stamp(img, sprite, x, y, flip=flip)
-        if bubble:
-            draw_bubble(img, bubble, x - 1, y - 19)
-        frames.append(img.resize((W * SCALE, H * SCALE), Image.NEAREST))
+    total = len(plan)
+    duration = total * SECONDS_PER_FRAME
 
-    # A frame with the dog and a bubble on screen holds every color in the scene.
-    sitting = next(i for i, step in enumerate(plan) if step[4])
-    palette = frames[sitting].quantize(colors=64, dither=Image.Dither.NONE)
-    out = [frame.quantize(palette=palette, dither=Image.Dither.NONE) for frame in frames]
-    path = Path(__file__).with_name("banner.gif")
-    out[0].save(path, save_all=True, append_images=out[1:], duration=MS_PER_FRAME, loop=0, disposal=1)
-    print(path.name, len(out), "frames", path.stat().st_size // 1024, "KB")
+    background = draw_background()
+    px = background.load()
+    bg = run_paths([["#%02x%02x%02x" % px[x, y] for x in range(W)] for y in range(H)])
+
+    used = sorted({(name, flip) for name, _, _, flip in plan} | {("fly0", False), ("fly1", False)})
+    ids = {key: f"s{i}" for i, key in enumerate(used)}
+    defs = "".join(f'<g id="{ids[k]}">{sprite_svg(SPRITES[k[0]], k[1])}</g>' for k in used)
+
+    body = []
+    for f, (name, x, lift, flip) in enumerate(plan):
+        y = FEET_Y - len(SPRITES[name]) - lift
+        a = 2 * math.pi * f / total
+        fly_x = round(148 + 36 * math.sin(a)) - 2
+        fly_y = round(30 + 8 * math.sin(3 * a)) - 2
+        fly = ids[(f"fly{f // 2 % 2}", False)]
+        body.append(
+            f'<g class="f" style="animation-delay:{f * SECONDS_PER_FRAME:.2f}s">'
+            f'<use href="#{fly}" x="{fly_x}" y="{fly_y}"/>'
+            f'<use href="#{ids[(name, flip)]}" x="{x}" y="{y}"/></g>'
+        )
+
+    # Slight overlap between frames so rounding never leaves a frame with no dog.
+    visible = 100 / total + 0.02
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W * 4}" height="{H * 4}" '
+        'shape-rendering="crispEdges" role="img">'
+        "<title>A dog wandering, sitting, and rolling around in front of a village school</title>"
+        f"<style>.f{{visibility:hidden;animation:s {duration:.2f}s step-end infinite}}"
+        f"@keyframes s{{0%{{visibility:visible}}{visible:.3f}%{{visibility:hidden}}}}</style>"
+        f"<defs>{defs}</defs>{bg}{''.join(body)}</svg>\n"
+    )
+    path = Path(__file__).with_name("banner.svg")
+    path.write_text(svg, encoding="utf-8", newline="\n")
+    print(path.name, total, "frames", f"{duration:.1f}s", path.stat().st_size // 1024, "KB")
 
 
 if __name__ == "__main__":

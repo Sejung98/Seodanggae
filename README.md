@@ -3,13 +3,12 @@
 English | [한국어](README.ko.md)
 
 <p align="center">
-  <img src="assets/banner.gif" width="100%" alt="Pixel art of a dog playing in front of a village school and reciting the characters for heaven and earth" />
+  <img src="assets/banner.svg" width="100%" alt="Pixel art of a dog wandering, sitting, and rolling around in front of a village school" />
 </p>
 
 > *After three years at the village school, even the dog recites poetry.* (Korean proverb)
 
 A *seodang* was a traditional village school, and *seodanggae* is its dog.
-The characters the dog recites, 天 and 地, open the Thousand Character Classic, the first book children learned there.
 
 Notes and hands-on notebooks from studying genomics, statistics, programming, and AI.
 Each topic folder holds a write-up (`notes.md`) and a notebook (`lab.ipynb`).

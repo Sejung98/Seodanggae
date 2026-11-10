@@ -20,6 +20,7 @@
 | [03_genomics](03_genomics/) | NGS, 변이, copy number, signature, RNA-seq |
 | [04_machine-learning](04_machine-learning/) | 머신러닝, 딥러닝, LLM |
 | [05_workflow-hpc](05_workflow-hpc/) | Nextflow, Slurm, Docker |
+| [06_papers](06_papers/) | 논문 정리: 스토리, 방법론, 비평 (정리 글만, 실습 없음) |
 
 ## 폴더 구조
 

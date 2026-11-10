@@ -22,6 +22,7 @@ Each topic folder holds a write-up (`notes.md`) and a notebook (`lab.ipynb`).
 | [03_genomics](03_genomics/) | NGS, variants, copy number, signatures, RNA-seq |
 | [04_machine-learning](04_machine-learning/) | Machine learning, deep learning, LLMs |
 | [05_workflow-hpc](05_workflow-hpc/) | Nextflow, Slurm, Docker |
+| [06_papers](06_papers/) | Paper reading notes: story, methods, critique (notes only, no notebook) |
 
 ## Layout
 

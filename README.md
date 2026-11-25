@@ -37,6 +37,8 @@ Each topic gets its own folder, with the write-up and the notebook side by side.
     └── data/            practice data (not pushed to GitHub)
 ```
 
+Topics with several notebooks number them with a short name, like `lab01_sampling.ipynb`, and track progress in a table in `notes.md`.
+
 ## Adding a topic
 
 1. Copy `_template` into a category folder and rename it after the topic.
